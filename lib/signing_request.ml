@@ -1,5 +1,3 @@
-let ( let* ) = Result.bind
-
 module Ext = struct
 
   type _ k =
@@ -28,6 +26,7 @@ module Ext = struct
 
   let pp ppf m = iter (fun (B (k, v)) -> pp_one k ppf v ; Fmt.sp ppf ()) m
 end
+
 
 type request_info = {
   subject : Distinguished_name.t ;
@@ -111,6 +110,9 @@ module Asn = struct
   let signing_request_of_cs, signing_request_to_cs =
     projections_of Asn.der signing_request
 end
+
+
+let ( let* ) = Result.bind
 
 let info { asn ; _ } = asn.info
 
