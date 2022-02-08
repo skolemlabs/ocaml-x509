@@ -25,3 +25,5 @@ module Authenticator = Authenticator
 module PKCS12 = P12
 
 module OCSP = Ocsp
+
+module Signing_request_asn = Signing_request.Asn
