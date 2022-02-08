@@ -759,6 +759,72 @@ module Validation : sig
     time:(unit -> Ptime.t option) -> hash:Mirage_crypto.Hash.hash ->
     fingerprint:Cstruct.t -> Certificate.t list -> r
 end
+    module Algorithm : sig
+      type ec_curve =
+      [ `SECP224R1 | `SECP256R1 | `SECP384R1 | `SECP521R1 ]
+      
+      type t =
+      (* pk algos *)
+      (* any more? is the universe big enough? ramsey's theorem for pk cyphers? *)
+      | RSA
+      | EC_pub of ec_curve
+    
+      (* sig algos *)
+      | MD2_RSA
+      | MD4_RSA
+      | MD5_RSA
+      | RIPEMD160_RSA
+      | SHA1_RSA
+      | SHA256_RSA
+      | SHA384_RSA
+      | SHA512_RSA
+      | SHA224_RSA
+      | ECDSA_SHA1
+      | ECDSA_SHA224
+      | ECDSA_SHA256
+      | ECDSA_SHA384
+      | ECDSA_SHA512
+    
+      | ED25519
+    
+      (* digest algorithms *)
+      | MD2
+      | MD4
+      | MD5
+      | SHA1
+      | SHA256
+      | SHA384
+      | SHA512
+      | SHA224
+      | SHA512_224
+      | SHA512_256
+    
+      (* HMAC algorithms *)
+      | HMAC_SHA1
+      | HMAC_SHA224
+      | HMAC_SHA256
+      | HMAC_SHA384
+      | HMAC_SHA512
+    
+      (* symmetric block ciphers *)
+      | AES128_CBC of Cstruct.t
+      | AES192_CBC of Cstruct.t
+      | AES256_CBC of Cstruct.t
+    
+      (* PBE encryption algorithms *)
+      | SHA_RC4_128 of Cstruct.t * int
+      | SHA_RC4_40 of Cstruct.t * int
+      | SHA_3DES_CBC of Cstruct.t * int
+      | SHA_2DES_CBC of Cstruct.t * int
+      | SHA_RC2_128_CBC of Cstruct.t * int
+      | SHA_RC2_40_CBC of Cstruct.t * int
+    
+      | PBKDF2 of Cstruct.t * int * int option * t
+      | PBES2 of t * t
+      
+      val of_signature_algorithm : [> `ECDSA | `ED25519 | `RSA_PKCS1 ] ->
+        [> `MD5 | `SHA1 | `SHA224 | `SHA256 | `SHA384 | `SHA512 ] -> t
+    end
 
 (** Certificate Signing request *)
 
@@ -766,27 +832,8 @@ end
     {{:https://tools.ietf.org/html/rfc2986}PKCS 10 certificate signing requests},
     their construction and encoding, and provisioning using a private key to
     generate a certificate with a signature thereof. *)
+
 module Signing_request : sig
-  (** The abstract type of a (self-signed) certification request. *)
-  type t
-
-  (** {1 Decoding and encoding in ASN.1 DER and PEM format} *)
-
-  (** [decode_der ~allowed_hashes cstruct] is [signing_request], the ASN.1
-      decoded [cstruct] or an error. The signature on the signing request
-      is validated, and its hash algorithm must be in [allowed_hashes] (by
-      default only SHA-2 is accepted). *)
-  val decode_der : ?allowed_hashes:Mirage_crypto.Hash.hash list -> Cstruct.t ->
-    (t, [> `Msg of string ]) result
-
-  (** [encode_der sr] is [cstruct], the ASN.1 encoded representation of the [sr]. *)
-  val encode_der : t -> Cstruct.t
-
-  (** [decode_pem pem] is [t], where the single signing request of the [pem] is extracted *)
-  val decode_pem : Cstruct.t -> (t, [> `Msg of string ]) result
-
-  (** [encode_pem signing_request] is [pem], the pem encoded signing request. *)
-  val encode_pem : t -> Cstruct.t
 
   (** {1 Construction of a signing request} *)
 
@@ -810,6 +857,36 @@ module Signing_request : sig
     public_key : Public_key.t ;
     extensions : Ext.t ;
   }
+
+  type request = {
+    info : request_info ;
+    signature_algorithm : Algorithm.t ;
+    signature : Cstruct.t
+ }
+ type t = {
+  asn : request ;
+  raw : Cstruct.t ;
+  }
+
+      val decode_der : ?allowed_hashes:Mirage_crypto.Hash.hash list -> Cstruct.t ->
+        (t, [> `Msg of string ]) result
+    
+      (** [encode_der sr] is [cstruct], the ASN.1 encoded representation of the [sr]. *)
+      val encode_der : t -> Cstruct.t
+    
+      (** [decode_pem pem] is [t], where the single signing request of the [pem] is extracted *)
+      val decode_pem : Cstruct.t -> (t, [> `Msg of string ]) result
+    
+      (** [encode_pem signing_request] is [pem], the pem encoded signing request. *)
+      val encode_pem : t -> Cstruct.t
+    
+
+  module Asn : sig
+    val request_info_to_cs : request_info -> Cstruct.t
+    val request_info_of_cs : Cstruct.t -> (request_info, Asn.error) result
+    val signing_request_of_cs : Cstruct.t -> (request, Asn.error) result
+    val signing_request_to_cs : request -> Cstruct.t
+  end
 
   (** [info signing_request] is {!request_info}, the information inside the
       signing_request. *)
@@ -1231,4 +1308,6 @@ module OCSP : sig
       ?now:Ptime.t -> Public_key.t ->
       (unit, [> Validation.signature_error | `No_signature | `Time_invalid ]) result
   end
+    
 end
+
