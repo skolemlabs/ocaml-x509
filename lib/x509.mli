@@ -810,6 +810,11 @@ module Signing_request : sig
     extensions : Ext.t ;
   }
 
+  module Asn : sig
+    val request_info_to_cs : request_info -> Cstruct.t
+    val request_info_of_cs : Cstruct.t -> (request_info, Asn.error) result
+  end
+
   (** [info signing_request] is {!request_info}, the information inside the
       {!signing_request}. *)
   val info : t -> request_info
