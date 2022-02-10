@@ -1216,4 +1216,11 @@ module OCSP : sig
       ?now:Ptime.t -> Public_key.t ->
       (unit, [> Validation.signature_error | `No_signature | `Time_invalid ]) result
   end
+    
+end
+
+module Algs : sig
+  type t
+  val of_signature_algorithm : [> `ECDSA | `ED25519 | `RSA_PKCS1 ] ->
+    [> `MD5 | `SHA1 | `SHA224 | `SHA256 | `SHA384 | `SHA512 ] -> t
 end
