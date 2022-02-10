@@ -1227,7 +1227,7 @@ module OCSP : sig
     
 end
 
-module Algs : sig
+module Algorithm : sig
   type t
   val of_signature_algorithm : [> `ECDSA | `ED25519 | `RSA_PKCS1 ] ->
     [> `MD5 | `SHA1 | `SHA224 | `SHA256 | `SHA384 | `SHA512 ] -> t

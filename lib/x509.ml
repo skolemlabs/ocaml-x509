@@ -26,4 +26,4 @@ module PKCS12 = P12
 
 module OCSP = Ocsp
 
-module Algs = Algorithm
+module Algorithm = Algorithm
