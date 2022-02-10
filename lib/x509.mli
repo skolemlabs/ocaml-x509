@@ -758,6 +758,72 @@ module Validation : sig
     time:(unit -> Ptime.t option) -> hash:Mirage_crypto.Hash.hash ->
     fingerprint:Cstruct.t -> Certificate.t list -> r
 end
+    module Algorithm : sig
+      type ec_curve =
+      [ `SECP224R1 | `SECP256R1 | `SECP384R1 | `SECP521R1 ]
+      
+      type t =
+      (* pk algos *)
+      (* any more? is the universe big enough? ramsey's theorem for pk cyphers? *)
+      | RSA
+      | EC_pub of ec_curve
+    
+      (* sig algos *)
+      | MD2_RSA
+      | MD4_RSA
+      | MD5_RSA
+      | RIPEMD160_RSA
+      | SHA1_RSA
+      | SHA256_RSA
+      | SHA384_RSA
+      | SHA512_RSA
+      | SHA224_RSA
+      | ECDSA_SHA1
+      | ECDSA_SHA224
+      | ECDSA_SHA256
+      | ECDSA_SHA384
+      | ECDSA_SHA512
+    
+      | ED25519
+    
+      (* digest algorithms *)
+      | MD2
+      | MD4
+      | MD5
+      | SHA1
+      | SHA256
+      | SHA384
+      | SHA512
+      | SHA224
+      | SHA512_224
+      | SHA512_256
+    
+      (* HMAC algorithms *)
+      | HMAC_SHA1
+      | HMAC_SHA224
+      | HMAC_SHA256
+      | HMAC_SHA384
+      | HMAC_SHA512
+    
+      (* symmetric block ciphers *)
+      | AES128_CBC of Cstruct.t
+      | AES192_CBC of Cstruct.t
+      | AES256_CBC of Cstruct.t
+    
+      (* PBE encryption algorithms *)
+      | SHA_RC4_128 of Cstruct.t * int
+      | SHA_RC4_40 of Cstruct.t * int
+      | SHA_3DES_CBC of Cstruct.t * int
+      | SHA_2DES_CBC of Cstruct.t * int
+      | SHA_RC2_128_CBC of Cstruct.t * int
+      | SHA_RC2_40_CBC of Cstruct.t * int
+    
+      | PBKDF2 of Cstruct.t * int * int option * t
+      | PBES2 of t * t
+      
+      val of_signature_algorithm : [> `ECDSA | `ED25519 | `RSA_PKCS1 ] ->
+        [> `MD5 | `SHA1 | `SHA224 | `SHA256 | `SHA384 | `SHA512 ] -> t
+    end
 
 (** Certificate Signing request *)
 
@@ -765,6 +831,7 @@ end
     {{:https://tools.ietf.org/html/rfc2986}PKCS 10 certificate signing requests},
     their construction and encoding, and provisioning using a private key to
     generate a certificate with a signature thereof. *)
+
 module Signing_request : sig
   (** The abstract type of a (self-signed) certification request. *)
   type t
@@ -1227,69 +1294,3 @@ module OCSP : sig
     
 end
 
-module Algorithm : sig
-  type ec_curve =
-  [ `SECP224R1 | `SECP256R1 | `SECP384R1 | `SECP521R1 ]
-  
-  type t =
-  (* pk algos *)
-  (* any more? is the universe big enough? ramsey's theorem for pk cyphers? *)
-  | RSA
-  | EC_pub of ec_curve
-
-  (* sig algos *)
-  | MD2_RSA
-  | MD4_RSA
-  | MD5_RSA
-  | RIPEMD160_RSA
-  | SHA1_RSA
-  | SHA256_RSA
-  | SHA384_RSA
-  | SHA512_RSA
-  | SHA224_RSA
-  | ECDSA_SHA1
-  | ECDSA_SHA224
-  | ECDSA_SHA256
-  | ECDSA_SHA384
-  | ECDSA_SHA512
-
-  | ED25519
-
-  (* digest algorithms *)
-  | MD2
-  | MD4
-  | MD5
-  | SHA1
-  | SHA256
-  | SHA384
-  | SHA512
-  | SHA224
-  | SHA512_224
-  | SHA512_256
-
-  (* HMAC algorithms *)
-  | HMAC_SHA1
-  | HMAC_SHA224
-  | HMAC_SHA256
-  | HMAC_SHA384
-  | HMAC_SHA512
-
-  (* symmetric block ciphers *)
-  | AES128_CBC of Cstruct.t
-  | AES192_CBC of Cstruct.t
-  | AES256_CBC of Cstruct.t
-
-  (* PBE encryption algorithms *)
-  | SHA_RC4_128 of Cstruct.t * int
-  | SHA_RC4_40 of Cstruct.t * int
-  | SHA_3DES_CBC of Cstruct.t * int
-  | SHA_2DES_CBC of Cstruct.t * int
-  | SHA_RC2_128_CBC of Cstruct.t * int
-  | SHA_RC2_40_CBC of Cstruct.t * int
-
-  | PBKDF2 of Cstruct.t * int * int option * t
-  | PBES2 of t * t
-  
-  val of_signature_algorithm : [> `ECDSA | `ED25519 | `RSA_PKCS1 ] ->
-    [> `MD5 | `SHA1 | `SHA224 | `SHA256 | `SHA384 | `SHA512 ] -> t
-end
