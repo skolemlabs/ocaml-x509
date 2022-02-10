@@ -833,26 +833,6 @@ end
     generate a certificate with a signature thereof. *)
 
 module Signing_request : sig
-  (** The abstract type of a (self-signed) certification request. *)
-  type t
-
-  (** {1 Decoding and encoding in ASN.1 DER and PEM format} *)
-
-  (** [decode_der ~allowed_hashes cstruct] is [signing_request], the ASN.1
-      decoded [cstruct] or an error. The signature on the signing request
-      is validated, and its hash algorithm must be in [allowed_hashes] (by
-      default only SHA-2 is accepted). *)
-  val decode_der : ?allowed_hashes:Mirage_crypto.Hash.hash list -> Cstruct.t ->
-    (t, [> `Msg of string ]) result
-
-  (** [encode_der sr] is [cstruct], the ASN.1 encoded representation of the [sr]. *)
-  val encode_der : t -> Cstruct.t
-
-  (** [decode_pem pem] is [t], where the single signing request of the [pem] is extracted *)
-  val decode_pem : Cstruct.t -> (t, [> `Msg of string ]) result
-
-  (** [encode_pem signing_request] is [pem], the pem encoded signing request. *)
-  val encode_pem : t -> Cstruct.t
 
   (** {1 Construction of a signing request} *)
 
@@ -882,6 +862,23 @@ module Signing_request : sig
     signature_algorithm : Algorithm.t ;
     signature : Cstruct.t
  }
+ type t = {
+  asn : request ;
+  raw : Cstruct.t ;
+  }
+
+      val decode_der : ?allowed_hashes:Mirage_crypto.Hash.hash list -> Cstruct.t ->
+        (t, [> `Msg of string ]) result
+    
+      (** [encode_der sr] is [cstruct], the ASN.1 encoded representation of the [sr]. *)
+      val encode_der : t -> Cstruct.t
+    
+      (** [decode_pem pem] is [t], where the single signing request of the [pem] is extracted *)
+      val decode_pem : Cstruct.t -> (t, [> `Msg of string ]) result
+    
+      (** [encode_pem signing_request] is [pem], the pem encoded signing request. *)
+      val encode_pem : t -> Cstruct.t
+    
 
   module Asn : sig
     val request_info_to_cs : request_info -> Cstruct.t
